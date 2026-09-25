@@ -1,9 +1,13 @@
 .venv/
 __pycache__/
 .env
+.env.*
+!.env.example
 *.pyc
 .pytest_cache/
 chroma_db/
 uploads/
+reports/*.pdf
+*.log
 node_modules/
 dist/

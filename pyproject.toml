@@ -1,0 +1,9 @@
+[project]
+name = "researchpilot"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.115.0",
+    "reportlab>=5.0.1",
+    "uvicorn[standard]>=0.30.0",
+]
