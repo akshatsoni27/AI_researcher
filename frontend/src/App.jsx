@@ -1,122 +1,405 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+
+import Sidebar from "./components/Sidebar";
+import ResearchInput from "./components/ResearchInput";
+import ResearchProgress from "./components/ResearchProgress";
+import ResearchResults from "./components/ResearchResults";
+
+import "./App.css";
+
+const API_BASE = "http://127.0.0.1:8000";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activePage, setActivePage] = useState("research");
+
+  const [jobId, setJobId] = useState(null);
+  const [job, setJob] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // ---------------------------------------------------------
+  // START RESEARCH
+  // ---------------------------------------------------------
+
+  const startResearch = async (goal, maxIterations, document) => {
+    setLoading(true);
+    setError("");
+    setJob(null);
+    setJobId(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("goal", goal);
+      formData.append("max_iterations", String(maxIterations));
+
+      if (document) {
+        formData.append("document", document);
+      }
+
+      const response = await fetch(
+        `${API_BASE}/api/research`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+
+        throw new Error(
+          data?.detail || "Failed to start research"
+        );
+      }
+
+      const data = await response.json();
+
+      setJobId(data.id);
+      setActivePage("research");
+    } catch (err) {
+      setError(
+        err.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ---------------------------------------------------------
+  // POLL RESEARCH STATUS
+  // ---------------------------------------------------------
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    let cancelled = false;
+    let timer = null;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE}/api/research/${jobId}`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch research status"
+          );
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setJob(data);
+        }
+
+        if (
+          data.status !== "completed" &&
+          data.status !== "failed"
+        ) {
+          timer = setTimeout(poll, 1500);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err.message ||
+              "Unable to check research status"
+          );
+        }
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [jobId]);
+
+  // ---------------------------------------------------------
+  // RESET RESEARCH
+  // ---------------------------------------------------------
+
+  const resetResearch = () => {
+    setJobId(null);
+    setJob(null);
+    setError("");
+    setLoading(false);
+    setActivePage("research");
+  };
+
+  // ---------------------------------------------------------
+  // RESEARCH PAGE
+  // ---------------------------------------------------------
+
+  const renderResearchPage = () => {
+    // Initial research screen
+    if (!jobId && !job) {
+      return (
+        <>
+          <ResearchInput
+            onSubmit={startResearch}
+            loading={loading}
+          />
+
+          <div className="workflow-strip">
+            <div className="workflow-item">
+              <span>01</span>
+
+              <div>
+                <strong>Plan</strong>
+                <small>
+                  Break the goal into tasks
+                </small>
+              </div>
+            </div>
+
+            <div className="workflow-line" />
+
+            <div className="workflow-item">
+              <span>02</span>
+
+              <div>
+                <strong>Research</strong>
+                <small>
+                  Search and collect evidence
+                </small>
+              </div>
+            </div>
+
+            <div className="workflow-line" />
+
+            <div className="workflow-item">
+              <span>03</span>
+
+              <div>
+                <strong>Verify</strong>
+                <small>
+                  Check evidence and gaps
+                </small>
+              </div>
+            </div>
+
+            <div className="workflow-line" />
+
+            <div className="workflow-item">
+              <span>04</span>
+
+              <div>
+                <strong>Report</strong>
+                <small>
+                  Generate the final PDF
+                </small>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Research running
+    if (
+      jobId &&
+      job?.status !== "completed" &&
+      job?.status !== "failed"
+    ) {
+      return <ResearchProgress job={job} />;
+    }
+
+    // Research completed
+    if (
+      job?.status === "completed" &&
+      job.result
+    ) {
+      return (
+        <ResearchResults
+          job={job}
+          apiBase={API_BASE}
+        />
+      );
+    }
+
+    // Research failed
+    if (job?.status === "failed") {
+      return (
+        <div className="failed-card">
+          <div className="failed-icon">
+            !
+          </div>
+
+          <div>
+            <h3>Research stopped</h3>
+
+            <p>
+              {job.error ||
+                "An unexpected error occurred."}
+            </p>
+          </div>
+
+          <button onClick={resetResearch}>
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // ---------------------------------------------------------
+  // PLACEHOLDER PAGES
+  // ---------------------------------------------------------
+
+  const renderPlaceholderPage = () => {
+    const pages = {
+      reports: {
+        label: "WORKSPACE",
+        title: "Reports",
+        description:
+          "Your completed research reports will appear here.",
+        icon: "▣",
+      },
+
+      knowledge: {
+        label: "WORKSPACE",
+        title: "Knowledge Base",
+        description:
+          "Upload documents and give ResearchPilot additional knowledge.",
+        icon: "◇",
+      },
+
+      workflow: {
+        label: "AGENT",
+        title: "Agent Workflow",
+        description:
+          "Visualize how ResearchPilot plans, researches, verifies and generates reports.",
+        icon: "◎",
+      },
+
+      sources: {
+        label: "AGENT",
+        title: "Sources",
+        description:
+          "Sources collected during your research runs will appear here.",
+        icon: "◈",
+      },
+    };
+
+    const page = pages[activePage];
+
+    if (!page) {
+      return null;
+    }
+
+    return (
+      <div className="placeholder-page">
+        <div className="placeholder-icon">
+          {page.icon}
+        </div>
+
+        <div className="section-kicker">
+          {page.label}
+        </div>
+
+        <h2>{page.title}</h2>
+
+        <p>{page.description}</p>
+
+        <div className="placeholder-card">
+          <span>Coming next</span>
+
+          <strong>
+            We're building this section.
+          </strong>
+
+          <small>
+            Your existing ResearchPilot workflow
+            remains untouched.
+          </small>
+        </div>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------
+  // MAIN PAGE
+  // ---------------------------------------------------------
+
+  const renderPage = () => {
+    if (activePage === "research") {
+      return renderResearchPage();
+    }
+
+    return renderPlaceholderPage();
+  };
+
+  // ---------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
 
-      <div className="ticks"></div>
+      <Sidebar
+        activePage={activePage}
+        onNavigate={setActivePage}
+      />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <main className="main-content">
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <div className="topbar">
+
+          <div>
+            <div className="eyebrow">
+              AUTONOMOUS RESEARCH
+            </div>
+
+            <h1>ResearchPilot</h1>
+
+            <p>
+              Plan, research, verify and generate
+              a complete research report.
+            </p>
+          </div>
+
+          {job?.status === "completed" &&
+            activePage === "research" && (
+              <button
+                className="new-research-btn"
+                onClick={resetResearch}
+              >
+                + New Research
+              </button>
+            )}
+        </div>
+
+        {error && (
+          <div className="error-box">
+            <strong>
+              Research error
+            </strong>
+
+            <span>{error}</span>
+
+            <button
+              onClick={() => setError("")}
+              className="error-close"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {renderPage()}
+
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;

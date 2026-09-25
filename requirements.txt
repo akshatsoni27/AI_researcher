@@ -13,4 +13,5 @@ langchain-chroma
 requests
 beautifulsoup4
 fastapi
+python-multipart
 uvicorn[standard]

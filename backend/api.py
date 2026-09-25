@@ -6,12 +6,20 @@ from threading import Lock
 from typing import Any
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.graph.workflow import create_research_graph
+from backend.rag.vectorstore import create_vectorstore
 from backend.reports.pdf_generator import generate_pdf_report
 
 
@@ -31,6 +39,8 @@ app.add_middleware(
 
 _jobs: dict[str, dict[str, Any]] = {}
 _jobs_lock = Lock()
+UPLOADS_DIR = Path("uploads")
+MAX_UPLOAD_SIZE = 20 * 1024 * 1024
 
 
 class ResearchRequest(BaseModel):
@@ -149,10 +159,50 @@ def health() -> dict[str, Any]:
 
 
 @app.post("/api/research")
-def start_research(
-    request: ResearchRequest,
+async def start_research(
     background_tasks: BackgroundTasks,
+    goal: str = Form(..., min_length=3, max_length=1000),
+    max_iterations: int = Form(default=2, ge=1, le=5),
+    document: UploadFile | None = File(default=None),
 ) -> dict[str, str]:
+    request = ResearchRequest(
+        goal=goal,
+        max_iterations=max_iterations,
+    )
+
+    if document is not None and document.filename:
+        if not document.filename.lower().endswith(".pdf"):
+            raise HTTPException(
+                status_code=415,
+                detail="Only PDF documents are supported.",
+            )
+
+        upload_path = UPLOADS_DIR / f"{uuid4().hex}.pdf"
+        UPLOADS_DIR.mkdir(exist_ok=True)
+
+        try:
+            document_size = 0
+            with upload_path.open("wb") as output_file:
+                while chunk := await document.read(1024 * 1024):
+                    document_size += len(chunk)
+                    if document_size > MAX_UPLOAD_SIZE:
+                        raise HTTPException(
+                            status_code=413,
+                            detail="PDF files must be 20 MB or smaller.",
+                        )
+                    output_file.write(chunk)
+
+            create_vectorstore(str(upload_path))
+        except HTTPException:
+            upload_path.unlink(missing_ok=True)
+            raise
+        except Exception as error:
+            upload_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=400,
+                detail=f"The PDF could not be indexed: {error}",
+            ) from error
+
     job_id = uuid4().hex
     job = {
         "id": job_id,
