@@ -23,7 +23,7 @@ def main():
     # ---------------------------------------------------------
 
     print("\n" + "=" * 60)
-    print("RESEARCH PILOT")
+    print("MIMIR")
     print("=" * 60)
 
     print("\nGoal:")
@@ -198,7 +198,7 @@ def main():
 
     print("=" * 60)
 
-    print("\nResearchPilot finished processing your request.")
+    print("\nMIMIR finished processing your request.")
 
 
 if __name__ == "__main__":

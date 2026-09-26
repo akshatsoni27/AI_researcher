@@ -29,7 +29,7 @@ function Sidebar({ activePage, onNavigate }) {
         <div className="brand-mark">R</div>
 
         <div className="brand-text">
-          <strong>ResearchPilot</strong>
+          <strong>MIMIR</strong>
           <span>AI Research Agent</span>
         </div>
       </div>
@@ -59,7 +59,7 @@ function Sidebar({ activePage, onNavigate }) {
         </div>
 
         <div className="sidebar-footer">
-          ResearchPilot v0.1.0
+          MIMIR v0.1.0
         </div>
       </div>
     </aside>

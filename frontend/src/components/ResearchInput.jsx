@@ -37,7 +37,7 @@ function ResearchInput({ onSubmit, loading }) {
       </h2>
 
       <p className="hero-description">
-        ResearchPilot turns a question into a structured investigation,
+        MIMIR turns a question into a structured investigation,
         gathers evidence from available sources, verifies the findings,
         and produces a research report.
       </p>
@@ -57,7 +57,7 @@ function ResearchInput({ onSubmit, loading }) {
         <textarea
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
-          placeholder="What would you like ResearchPilot to investigate?"
+          placeholder="What would you like MIMIR to investigate?"
           maxLength={1000}
           rows={5}
           disabled={loading}

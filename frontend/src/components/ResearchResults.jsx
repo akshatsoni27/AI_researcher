@@ -223,7 +223,7 @@ function ResearchResults({ job, apiBase }) {
           <h2>Research report</h2>
 
           <p>
-            Evidence collected and verified by ResearchPilot.
+            Evidence collected and verified by MIMIR.
           </p>
         </div>
 
@@ -382,7 +382,7 @@ function ResearchResults({ job, apiBase }) {
           <div className="chat-messages" aria-live="polite">
             {chatMessages.map((message, index) => (
               <div className={`chat-message ${message.role}`} key={index}>
-                <span>{message.role === "user" ? "YOU" : "RESEARCHPILOT"}</span>
+                <span>{message.role === "user" ? "YOU" : "MIMIR"}</span>
                 <div className="chat-content">
                   {renderChatContent(message.content)}
                 </div>
@@ -390,7 +390,7 @@ function ResearchResults({ job, apiBase }) {
             ))}
             {chatLoading && (
               <div className="chat-message assistant">
-                <span>RESEARCHPILOT</span>
+                <span>MIMIR</span>
                 <div className="chat-content">
                   <p>Searching and reasoning over the research...</p>
                 </div>

@@ -33,8 +33,8 @@ def generate_pdf_report(
         leftMargin=20 * mm,
         topMargin=20 * mm,
         bottomMargin=20 * mm,
-        title="ResearchPilot Report",
-        author="ResearchPilot",
+        title="MIMIR Report",
+        author="MIMIR",
     )
 
     styles = getSampleStyleSheet()

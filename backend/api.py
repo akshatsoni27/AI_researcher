@@ -27,9 +27,9 @@ from backend.tools.web_search import web_search
 
 
 app = FastAPI(
-    title="ResearchPilot API",
+    title="MIMIR API",
     version="0.1.0",
-    description="API adapter for the existing ResearchPilot LangGraph workflow.",
+    description="API adapter for the MIMIR LangGraph research workflow.",
 )
 
 app.add_middleware(
@@ -223,7 +223,7 @@ async def start_research(
         "id": job_id,
         "status": "queued",
         "stage": "queued",
-        "activity": ["Queued for the ResearchPilot agent"],
+        "activity": ["Queued for the MIMIR agent"],
         "started_at": _now(),
         "updated_at": _now(),
         "chat_history": [],
@@ -319,7 +319,7 @@ def chat_about_research(
         for message in history
     )
     prompt = f"""
-You are the follow-up research assistant for ResearchPilot.
+You are the follow-up research assistant for MIMIR.
 
 Answer the user's question using the research context and fresh search results below.
 Do not invent facts or claim that the research proves something it does not.
@@ -380,10 +380,10 @@ def download_pdf(job_id: str) -> FileResponse:
     if not report:
         raise HTTPException(status_code=409, detail="The report is not ready")
 
-    filename = f"researchpilot-{job_id}.pdf"
+    filename = f"mimir-{job_id}.pdf"
     path = generate_pdf_report(report, filename=filename)
     return FileResponse(
         path,
         media_type="application/pdf",
-        filename="researchpilot-report.pdf",
+        filename="mimir-report.pdf",
     )

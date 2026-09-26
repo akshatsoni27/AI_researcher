@@ -150,7 +150,7 @@ function App() {
           <div className="workflow-strip">
             <div className="workflow-title">
               <span>AGENT WORKFLOW</span>
-              <strong>How ResearchPilot thinks</strong>
+              <strong>How MIMIR thinks</strong>
             </div>
 
             <div className="workflow-steps">
@@ -274,7 +274,7 @@ function App() {
         label: "WORKSPACE",
         title: "Knowledge Base",
         description:
-          "Upload documents and give ResearchPilot additional knowledge.",
+          "Upload documents and give MIMIR additional knowledge.",
         icon: "◇",
       },
 
@@ -282,7 +282,7 @@ function App() {
         label: "AGENT",
         title: "Agent Workflow",
         description:
-          "Visualize how ResearchPilot plans, researches, verifies and generates reports.",
+          "Visualize how MIMIR plans, researches, verifies and generates reports.",
         icon: "◎",
       },
 
@@ -323,7 +323,7 @@ function App() {
           </strong>
 
           <small>
-            Your existing ResearchPilot workflow
+            Your existing MIMIR workflow
             remains untouched.
           </small>
         </div>
@@ -364,7 +364,7 @@ function App() {
               AUTONOMOUS RESEARCH
             </div>
 
-            <h1>ResearchPilot</h1>
+            <h1>MIMIR</h1>
 
             <p>
               Plan, research, verify and generate

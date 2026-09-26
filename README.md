@@ -1,6 +1,6 @@
-# ResearchPilot
+# MIMIR
 
-ResearchPilot is an autonomous research assistant that plans a research task, gathers web or document evidence, verifies the results, and generates a cited Markdown report and PDF.
+MIMIR is an autonomous research assistant that plans a research task, gathers web or document evidence, verifies the results, and generates a cited Markdown report and PDF.
 
 ## Requirements
 
