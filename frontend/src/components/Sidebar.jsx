@@ -13,9 +13,7 @@ function Sidebar({ activePage, onNavigate }) {
   const renderItem = (item) => (
     <button
       key={item.id}
-      className={`nav-item ${
-        activePage === item.id ? "active" : ""
-      }`}
+      className={`nav-item ${activePage === item.id ? "active" : ""}`}
       onClick={() => onNavigate(item.id)}
     >
       <span className="nav-icon">{item.icon}</span>
@@ -25,8 +23,14 @@ function Sidebar({ activePage, onNavigate }) {
 
   return (
     <aside className="sidebar">
+      {/* BRAND */}
       <div className="brand">
-        <div className="brand-mark">R</div>
+        <div className="brand-logo">
+          <img
+            src="/mimir-logo.png"
+            alt="MIMIR logo"
+          />
+        </div>
 
         <div className="brand-text">
           <strong>MIMIR</strong>
@@ -34,12 +38,17 @@ function Sidebar({ activePage, onNavigate }) {
         </div>
       </div>
 
+      <div className="brand-divider" />
+
+      {/* NAVIGATION */}
       <nav className="sidebar-nav">
         <div className="nav-section">
           <span className="nav-label">WORKSPACE</span>
 
           {workspaceItems.map(renderItem)}
         </div>
+
+        <div className="nav-divider" />
 
         <div className="nav-section">
           <span className="nav-label">AGENT</span>
@@ -48,11 +57,12 @@ function Sidebar({ activePage, onNavigate }) {
         </div>
       </nav>
 
+      {/* BOTTOM */}
       <div className="sidebar-bottom">
         <div className="agent-status">
           <span className="status-dot" />
 
-          <div>
+          <div className="agent-status-text">
             <strong>Agent Online</strong>
             <small>LangGraph workflow</small>
           </div>

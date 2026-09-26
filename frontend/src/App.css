@@ -32,6 +32,24 @@
   margin-bottom: 52px;
 }
 
+.brand-logo {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 13px;
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.25);
+}
+
+.brand-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .brand-mark {
   width: 38px;
   height: 38px;
