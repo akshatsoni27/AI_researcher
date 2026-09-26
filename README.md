@@ -40,6 +40,7 @@ The API exposes:
 - `GET /api/health` to check service status
 - `POST /api/research` to start a research job
 - `GET /api/research/{job_id}` to retrieve job status and results
+- `POST /api/research/{job_id}/chat` to ask follow-up questions about a completed report
 - `GET /api/research/{job_id}/pdf` to download the generated PDF
 
 ## Document research

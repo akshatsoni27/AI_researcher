@@ -17,6 +17,7 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from langchain_groq import ChatGroq
 
 from backend.graph.workflow import create_research_graph
 from backend.rag.vectorstore import create_vectorstore
@@ -41,11 +42,22 @@ _jobs: dict[str, dict[str, Any]] = {}
 _jobs_lock = Lock()
 UPLOADS_DIR = Path("uploads")
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024
+MAX_CHAT_HISTORY = 12
+MAX_CHAT_CONTEXT = 18000
+
+chat_llm = ChatGroq(
+    model="openai/gpt-oss-120b",
+    temperature=0,
+)
 
 
 class ResearchRequest(BaseModel):
     goal: str = Field(min_length=3, max_length=1000)
     max_iterations: int = Field(default=2, ge=1, le=5)
+
+
+class ChatRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
 
 
 def _now() -> str:
@@ -211,6 +223,7 @@ async def start_research(
         "activity": ["Queued for the ResearchPilot agent"],
         "started_at": _now(),
         "updated_at": _now(),
+        "chat_history": [],
     }
     with _jobs_lock:
         _jobs[job_id] = job
@@ -225,6 +238,93 @@ def get_research(job_id: str) -> dict[str, Any]:
     if job is None:
         raise HTTPException(status_code=404, detail="Research run not found")
     return _public_job(job)
+
+
+@app.post("/api/research/{job_id}/chat")
+def chat_about_research(
+    job_id: str,
+    request: ChatRequest,
+) -> dict[str, Any]:
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="Research run not found")
+        if job.get("status") != "completed":
+            raise HTTPException(
+                status_code=409,
+                detail="Chat is available after the research report is complete.",
+            )
+
+        result = job.get("result") or {}
+        report = result.get("final_report", "")
+        history = list(job.get("chat_history", []))[-MAX_CHAT_HISTORY:]
+
+    if not report:
+        raise HTTPException(status_code=409, detail="The report is not available")
+
+    evidence_blocks = []
+    for index, item in enumerate(result.get("evidence", []), start=1):
+        source = item.get("title") or item.get("source") or "Unknown source"
+        location = item.get("url") or f"Page {item.get('page', 'unknown')}"
+        evidence_blocks.append(
+            f"SOURCE {index}: {source}\n{location}\n"
+            f"{item.get('content', '')[:1200]}"
+        )
+
+    context = (
+        f"Research goal:\n{result.get('user_goal', '')}\n\n"
+        f"Final report:\n{report}\n\n"
+        "Collected evidence:\n"
+        + "\n\n".join(evidence_blocks)
+    )[:MAX_CHAT_CONTEXT]
+
+    conversation = "\n".join(
+        f"{message['role'].upper()}: {message['content']}"
+        for message in history
+    )
+    prompt = f"""
+You are the follow-up research assistant for ResearchPilot.
+
+Answer the user's question using only the research context below.
+Do not invent facts or claim that the research proves something it does not.
+If the context does not answer the question, say that clearly and explain
+what information is missing. Keep the answer concise but useful.
+
+RESEARCH CONTEXT:
+{context}
+
+PREVIOUS FOLLOW-UP CONVERSATION:
+{conversation or "None"}
+
+USER QUESTION:
+{request.question}
+"""
+
+    try:
+        response = chat_llm.invoke(prompt)
+        answer = response.content
+    except Exception as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"The follow-up answer could not be generated: {error}",
+        ) from error
+
+    with _jobs_lock:
+        job = _jobs[job_id]
+        updated_history = list(job.get("chat_history", []))
+        updated_history.extend(
+            [
+                {"role": "user", "content": request.question},
+                {"role": "assistant", "content": answer},
+            ]
+        )
+        job["chat_history"] = updated_history[-MAX_CHAT_HISTORY:]
+        job["updated_at"] = _now()
+
+    return {
+        "question": request.question,
+        "answer": answer,
+    }
 
 
 @app.get("/api/research/{job_id}/pdf")
