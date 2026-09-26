@@ -498,15 +498,36 @@
 
   margin: 100px auto 0;
 
-  display: flex;
-  align-items: center;
-
   padding: 18px;
 
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 13px;
 
   background: rgba(255, 255, 255, 0.018);
+}
+
+.workflow-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.workflow-title span {
+  color: #7770df;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.workflow-title strong {
+  color: #d8d9df;
+  font-size: 12px;
+}
+
+.workflow-steps {
+  display: flex;
+  align-items: center;
 }
 
 .workflow-item {
@@ -535,6 +556,7 @@
 
   color: #565b66;
   font-size: 9px;
+  line-height: 1.4;
 }
 
 .workflow-line {

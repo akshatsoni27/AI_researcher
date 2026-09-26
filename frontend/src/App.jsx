@@ -148,53 +148,58 @@ function App() {
           />
 
           <div className="workflow-strip">
-            <div className="workflow-item">
-              <span>01</span>
-
-              <div>
-                <strong>Plan</strong>
-                <small>
-                  Break the goal into tasks
-                </small>
-              </div>
+            <div className="workflow-title">
+              <span>AGENT WORKFLOW</span>
+              <strong>How ResearchPilot thinks</strong>
             </div>
 
-            <div className="workflow-line" />
-
-            <div className="workflow-item">
-              <span>02</span>
-
-              <div>
-                <strong>Research</strong>
-                <small>
-                  Search and collect evidence
-                </small>
+            <div className="workflow-steps">
+              <div className="workflow-item">
+                <span>01</span>
+                <div>
+                  <strong>Interpret</strong>
+                  <small>Understand the goal and constraints</small>
+                </div>
               </div>
-            </div>
 
-            <div className="workflow-line" />
+              <div className="workflow-line" />
 
-            <div className="workflow-item">
-              <span>03</span>
-
-              <div>
-                <strong>Verify</strong>
-                <small>
-                  Check evidence and gaps
-                </small>
+              <div className="workflow-item">
+                <span>02</span>
+                <div>
+                  <strong>Route</strong>
+                  <small>Choose web, document, or hybrid sources</small>
+                </div>
               </div>
-            </div>
 
-            <div className="workflow-line" />
+              <div className="workflow-line" />
 
-            <div className="workflow-item">
-              <span>04</span>
+              <div className="workflow-item">
+                <span>03</span>
+                <div>
+                  <strong>Investigate</strong>
+                  <small>Search, retrieve, and collect evidence</small>
+                </div>
+              </div>
 
-              <div>
-                <strong>Report</strong>
-                <small>
-                  Generate the final PDF
-                </small>
+              <div className="workflow-line" />
+
+              <div className="workflow-item">
+                <span>04</span>
+                <div>
+                  <strong>Verify</strong>
+                  <small>Find gaps and loop back when needed</small>
+                </div>
+              </div>
+
+              <div className="workflow-line" />
+
+              <div className="workflow-item">
+                <span>05</span>
+                <div>
+                  <strong>Synthesize</strong>
+                  <small>Explain findings and answer follow-ups</small>
+                </div>
               </div>
             </div>
           </div>

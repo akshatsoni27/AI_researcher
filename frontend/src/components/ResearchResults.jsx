@@ -364,7 +364,7 @@ function ResearchResults({ job, apiBase }) {
           </div>
           <div className="chat-header-actions">
             {!chatMinimized && (
-              <span className="source-count">Context-aware chat</span>
+              <span className="source-count">Research + web search</span>
             )}
             <button
               className="chat-minimize-button"
@@ -392,7 +392,7 @@ function ResearchResults({ job, apiBase }) {
               <div className="chat-message assistant">
                 <span>RESEARCHPILOT</span>
                 <div className="chat-content">
-                  <p>Thinking from the report context...</p>
+                  <p>Searching and reasoning over the research...</p>
                 </div>
               </div>
             )}
