@@ -17,13 +17,8 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from langchain_groq import ChatGroq
 
-from backend.graph.workflow import create_research_graph
-from backend.rag.vectorstore import create_vectorstore
-from backend.rag.retriever import search_knowledge_base
 from backend.reports.pdf_generator import generate_pdf_report
-from backend.tools.web_search import web_search
 
 
 app = FastAPI(
@@ -48,10 +43,7 @@ MAX_CHAT_HISTORY = 12
 MAX_CHAT_CONTEXT = 18000
 MAX_FOLLOWUP_SEARCH_RESULTS = 5
 
-chat_llm = ChatGroq(
-    model="openai/gpt-oss-120b",
-    temperature=0,
-)
+chat_llm: Any | None = None
 
 
 class ResearchRequest(BaseModel):
@@ -65,6 +57,20 @@ class ChatRequest(BaseModel):
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _get_chat_llm() -> Any:
+    global chat_llm
+
+    if chat_llm is None:
+        from langchain_groq import ChatGroq
+
+        chat_llm = ChatGroq(
+            model="openai/gpt-oss-120b",
+            temperature=0,
+        )
+
+    return chat_llm
 
 
 def _public_job(job: dict[str, Any]) -> dict[str, Any]:
@@ -111,6 +117,8 @@ def _initial_state(request: ResearchRequest) -> dict[str, Any]:
 
 def _run_research(job_id: str, request: ResearchRequest) -> None:
     try:
+        from backend.graph.workflow import create_research_graph
+
         graph = create_research_graph()
         state = _initial_state(request)
         _set_job(
@@ -196,6 +204,8 @@ async def start_research(
         UPLOADS_DIR.mkdir(exist_ok=True)
 
         try:
+            from backend.rag.vectorstore import create_vectorstore
+
             document_size = 0
             with upload_path.open("wb") as output_file:
                 while chunk := await document.read(1024 * 1024):
@@ -274,6 +284,8 @@ def chat_about_research(
             f"{item.get('content', '')[:1200]}"
         )
 
+    from backend.tools.web_search import web_search
+
     web_results = web_search(
         request.question,
         max_results=MAX_FOLLOWUP_SEARCH_RESULTS,
@@ -290,6 +302,8 @@ def chat_about_research(
     document_results = []
     if result.get("document_context"):
         try:
+            from backend.rag.retriever import search_knowledge_base
+
             document_results = search_knowledge_base(request.question, k=3)
         except Exception as error:
             print(f"\n[Follow-up RAG Warning] Document search failed: {error}")
@@ -340,7 +354,7 @@ USER QUESTION:
 """
 
     try:
-        response = chat_llm.invoke(prompt)
+        response = _get_chat_llm().invoke(prompt)
         answer = response.content
     except Exception as error:
         raise HTTPException(
