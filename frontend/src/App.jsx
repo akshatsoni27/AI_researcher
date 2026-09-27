@@ -7,6 +7,7 @@ import ResearchResults from "./components/ResearchResults";
 
 import "./App.css";
 
+
 const API_BASE = "https://mimir-backend-xasj.onrender.com";
 
 function App() {
